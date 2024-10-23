@@ -47,7 +47,7 @@ function component() {
     // Set initial position (bottom-left)
     this.updatePosition = function() {
         this.x = 0; // Set to left edge of the screen
-        this.y = myGameArea.canvas.height - 120; // Set to bottom of the canvas, assuming sprite height is 100
+        this.y = myGameArea.canvas.height - 150; // Set to bottom of the canvas, assuming sprite height is 100
     };
 
     this.updatePosition(); // Initialize the position
@@ -59,7 +59,7 @@ function component() {
     this.images = [
         { src: 'img/Carriage.png', width: 200, x: this.x, y: this.y, image: new Image() },
         { src: 'img/Turret.png', width: 250, x: this.x, y: this.y - 40, image: new Image(), angle: 0 },
-        { src: 'img/Wheel.png', width: 120, x: this.x + 80, y: this.y - 40, image: new Image() }
+        { src: 'img/Wheel.png', width: 120, x: this.x + 80, y: this.y - 40, image: new Image(), angle: 0 }
     ];
 
     // Load images and draw them once loaded
@@ -81,7 +81,7 @@ function component() {
 
         // Update positions of each image layer (Carriage, Turret, Wheel)
         this.images[0].x = this.x;                   // Carriage
-        this.images[0].y = myGameArea.canvas.height - 120; // Adjust to remain at bottom
+        this.images[0].y = myGameArea.canvas.height - 150; // Adjust to remain at bottom
         this.images[1].x = this.x;                   // Turret
         this.images[1].y = this.images[0].y - 40;    // Position relative to Carriage
         this.images[2].x = this.x + 80;              // Wheel
@@ -94,14 +94,31 @@ function component() {
         this.redraw(); // Redraw the sprite with the updated position
     };
 
-    // Update the turret angle based on key presses
+    // Update the turret angle and sprite position based on key presses
     this.update = () => {
+        if (myGameArea.keys && myGameArea.keys[37]) { 
+            this.x -= 5; 
+            this.images[2].angle -= 5; // Rotate wheel anti-clockwise
+        } // Left arrow key
+        if (myGameArea.keys && myGameArea.keys[39]) { 
+            this.x += 5; 
+            this.images[2].angle += 5; // Rotate wheel clockwise
+        } // Right arrow key
         if (myGameArea.keys && myGameArea.keys[38]) { this.images[1].angle -= 1; } // Up arrow key
         if (myGameArea.keys && myGameArea.keys[40]) { this.images[1].angle += 1; } // Down arrow key
+
+        // Ensure the sprite stays within the canvas bounds
+        if (this.x < 0) { this.x = 0; }
+        if (this.x > myGameArea.canvas.width - 100) { this.x = myGameArea.canvas.width - 100; } // Assuming sprite width is 100
 
         // Restrict the turret angle
         if (this.images[1].angle < -20) { this.images[1].angle = -20; }
         if (this.images[1].angle > 35) { this.images[1].angle = 35; }
+
+        // Update positions of each image layer (Carriage, Turret, Wheel)
+        this.images[0].x = this.x;                   // Carriage
+        this.images[1].x = this.x;                   // Turret
+        this.images[2].x = this.x + 80;              // Wheel
 
         this.redraw();
     };
@@ -121,11 +138,15 @@ function component() {
                 ctx.rotate(layer.angle * Math.PI / 180);
                 ctx.drawImage(layer.image, -layer.width / 2, -height / 2, layer.width, height);
                 ctx.restore();
+            } else if (layer.src === 'img/Wheel.png') {
+                ctx.save();
+                ctx.translate(layer.x + layer.width / 2, layer.y + height / 2);
+                ctx.rotate(layer.angle * Math.PI / 180);
+                ctx.drawImage(layer.image, -layer.width / 2, -height / 2, layer.width, height);
+                ctx.restore();
             } else {
                 ctx.drawImage(layer.image, layer.x, layer.y, layer.width, height);
             }
         });
     };
 }
-
-startGame();

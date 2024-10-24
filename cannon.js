@@ -13,11 +13,14 @@ var myGameArea = {
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     
         window.addEventListener('resize', () => {
-            myGameArea.canvas.width = window.innerWidth;
-            myGameArea.canvas.height = window.innerHeight;
+            const widthRatio = window.innerWidth / this.canvas.width;
+            const heightRatio = window.innerHeight / this.canvas.height;
+
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
 
             // Handle the resizing logic
-            myGamePiece.handleResize();
+            myGamePiece.handleResize(widthRatio, heightRatio);
         });
 
         window.addEventListener('keydown', (e) => {
@@ -41,8 +44,8 @@ var myGameArea = {
 }
 
 function component() {
-    this.originalWidth = window.innerWidth;
-    this.originalHeight = window.innerHeight;
+    this.x = 0;
+    this.y = 0;
 
     // Set initial position (bottom-left)
     this.updatePosition = function() {
@@ -51,9 +54,6 @@ function component() {
     };
 
     this.updatePosition(); // Initialize the position
-
-    this.initialX = this.x;
-    this.initialY = this.y;
 
     // Array for sprite images (layers)
     this.images = [
@@ -71,13 +71,10 @@ function component() {
     });
 
     // Handle resize and adjust the sprite position
-    this.handleResize = () => {
-        const widthRatio = window.innerWidth / this.originalWidth;
-        const heightRatio = window.innerHeight / this.originalHeight;
-
+    this.handleResize = (widthRatio, heightRatio) => {
         // Calculate new x and y positions based on ratios
-        this.x = this.initialX * widthRatio;
-        this.y = this.initialY * heightRatio;
+        this.x *= widthRatio;
+        this.y *= heightRatio;
 
         // Update positions of each image layer (Carriage, Turret, Wheel)
         this.images[0].x = this.x;                   // Carriage
@@ -86,10 +83,6 @@ function component() {
         this.images[1].y = this.images[0].y - 40;    // Position relative to Carriage
         this.images[2].x = this.x + 80;              // Wheel
         this.images[2].y = this.images[0].y - 40;    // Position relative to Carriage
-
-        // Store new canvas size as the original size for future reference
-        this.originalWidth = window.innerWidth;
-        this.originalHeight = window.innerHeight;
 
         this.redraw(); // Redraw the sprite with the updated position
     };
@@ -109,7 +102,9 @@ function component() {
 
         // Ensure the sprite stays within the canvas bounds
         if (this.x < 0) { this.x = 0; }
-        if (this.x > myGameArea.canvas.width - 100) { this.x = myGameArea.canvas.width - 100; } // Assuming sprite width is 100
+        if (this.x > myGameArea.canvas.width - this.images[1].width - 30) { 
+            this.x = myGameArea.canvas.width - this.images[1].width - 30; 
+        } // Adjusted to stop a bit away from the right border
 
         // Restrict the turret angle
         if (this.images[1].angle < -20) { this.images[1].angle = -20; }

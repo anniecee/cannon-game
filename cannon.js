@@ -1,6 +1,7 @@
 function startGame() {
     myGameArea.start();
     myGamePiece = new component();
+    myCannonball = null; // Initialize cannonball as null
 }
 
 // Create a canvas element and append it to the document
@@ -37,6 +38,9 @@ var myGameArea = {
     update: function() {
         myGameArea.clear();
         myGamePiece.update();
+        if (myCannonball) {
+            myCannonball.update();
+        }
     },
     clear: function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -99,6 +103,7 @@ function component() {
         } // Right arrow key
         if (myGameArea.keys && myGameArea.keys[38]) { this.images[1].angle -= 1; } // Up arrow key
         if (myGameArea.keys && myGameArea.keys[40]) { this.images[1].angle += 1; } // Down arrow key
+        if (myGameArea.keys && myGameArea.keys[32]) { this.fireCannonball(); } // Space key to fire
 
         // Ensure the sprite stays within the canvas bounds
         if (this.x < 0) { this.x = 0; }
@@ -118,10 +123,26 @@ function component() {
         this.redraw();
     };
 
+    // Fire a cannonball
+    this.fireCannonball = () => {
+        if (!myCannonball) {
+            const turret = this.images[1];
+            const cannonballX = turret.x + turret.width / 2;
+            const cannonballY = turret.y;
+            const angle = turret.angle;
+            myCannonball = new cannonball(cannonballX, cannonballY, angle);
+        }
+    };
+
     // Redraw the sprite on the canvas
     this.redraw = () => {
         const ctx = myGameArea.context;
         ctx.clearRect(0, 0, myGameArea.canvas.width, myGameArea.canvas.height); // Clear the canvas
+
+        // Draw the cannonball first if it exists
+        if (myCannonball) {
+            myCannonball.redraw();
+        }
 
         // Redraw each layer of the sprite
         this.images.forEach((layer) => {
@@ -143,5 +164,35 @@ function component() {
                 ctx.drawImage(layer.image, layer.x, layer.y, layer.width, height);
             }
         });
+    };
+}
+
+// Cannonball component
+function cannonball(x, y, angle) {
+    this.x = x;
+    this.y = y;
+    this.angle = angle;
+    this.speed = 10;
+    this.image = new Image();
+    this.image.src = 'img/cannonball.png';
+
+    this.update = () => {
+        this.x += this.speed * Math.cos(this.angle * Math.PI / 180);
+        this.y += this.speed * Math.sin(this.angle * Math.PI / 180);
+
+        // Remove the cannonball if it goes out of bounds
+        if (this.x > myGameArea.canvas.width || this.y > myGameArea.canvas.height || this.x < 0 || this.y < 0) {
+            myCannonball = null;
+        }
+
+        this.redraw();
+    };
+
+    this.redraw = () => {
+        const ctx = myGameArea.context;
+        const aspectRatio = this.image.height / this.image.width;
+        const width = 40;
+        const height = width * aspectRatio;
+        ctx.drawImage(this.image, this.x, this.y, width, height);
     };
 }

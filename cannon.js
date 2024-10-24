@@ -2,6 +2,8 @@ function startGame() {
     myGameArea.start();
     myGamePiece = new component();
     myCannonball = null; // Initialize cannonball as null
+    shotSound = new Audio('shot.m4a'); // Initialize the shot sound
+    createSpeedSlider(); // Create the speed slider
 }
 
 // Create a canvas element and append it to the document
@@ -50,6 +52,7 @@ var myGameArea = {
 function component() {
     this.x = 0;
     this.y = 0;
+    this.speed = 2; // Default speed
 
     // Set initial position (bottom-left)
     this.updatePosition = function() {
@@ -93,13 +96,15 @@ function component() {
 
     // Update the turret angle and sprite position based on key presses
     this.update = () => {
+        const moveSpeed = this.speed * 2; // Multiply the speed by 2 pixels
+
         if (myGameArea.keys && myGameArea.keys[37]) { 
-            this.x -= 5; 
-            this.images[2].angle -= 5; // Rotate wheel anti-clockwise
+            this.x -= moveSpeed; 
+            this.images[2].angle -= moveSpeed; // Rotate wheel anti-clockwise
         } // Left arrow key
         if (myGameArea.keys && myGameArea.keys[39]) { 
-            this.x += 5; 
-            this.images[2].angle += 5; // Rotate wheel clockwise
+            this.x += moveSpeed; 
+            this.images[2].angle += moveSpeed; // Rotate wheel clockwise
         } // Right arrow key
         if (myGameArea.keys && myGameArea.keys[38]) { this.images[1].angle -= 1; } // Up arrow key
         if (myGameArea.keys && myGameArea.keys[40]) { this.images[1].angle += 1; } // Down arrow key
@@ -126,13 +131,20 @@ function component() {
     // Fire a cannonball
     this.fireCannonball = () => {
         if (!myCannonball) {
-            const turret = this.images[1];
-            const cannonballX = turret.x + turret.width / 2;
-            const cannonballY = turret.y;
-            const angle = turret.angle;
+            const turret = this.images[1]; // The turret image layer
+            const turretTipOffsetX = (turret.width / 2) * Math.cos(turret.angle * Math.PI / 180); 
+            const turretTipOffsetY = (turret.width / 2) * Math.sin(turret.angle * Math.PI / 180);
+
+            // Calculate the position of the cannonball at the tip of the turret
+            const cannonballX = turret.x + turret.width / 2 + turretTipOffsetX;
+            const cannonballY = turret.y + turretTipOffsetY;
+
+            const angle = turret.angle; // Use the current turret angle
             myCannonball = new cannonball(cannonballX, cannonballY, angle);
+            shotSound.play(); // Play the shot sound
         }
     };
+
 
     // Redraw the sprite on the canvas
     this.redraw = () => {
@@ -183,6 +195,8 @@ function cannonball(x, y, angle) {
         // Remove the cannonball if it goes out of bounds
         if (this.x > myGameArea.canvas.width || this.y > myGameArea.canvas.height || this.x < 0 || this.y < 0) {
             myCannonball = null;
+            shotSound.pause(); // Stop the shot sound
+            shotSound.currentTime = 0; // Reset the sound to the beginning
         }
 
         this.redraw();
@@ -195,4 +209,33 @@ function cannonball(x, y, angle) {
         const height = width * aspectRatio;
         ctx.drawImage(this.image, this.x, this.y, width, height);
     };
+}
+
+// Create the speed slider
+function createSpeedSlider() {
+    const sliderContainer = document.createElement('div');
+    sliderContainer.style.position = 'absolute';
+    sliderContainer.style.top = '10px';
+    sliderContainer.style.left = '10px';
+    sliderContainer.style.zIndex = '1000';
+    sliderContainer.style.backgroundColor = 'white';
+    sliderContainer.style.padding = '10px';
+    sliderContainer.style.border = '1px solid black';
+
+    const sliderLabel = document.createElement('label');
+    sliderLabel.innerText = 'Cannon Moving Speed: ';
+    sliderContainer.appendChild(sliderLabel);
+
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '1';
+    slider.max = '10';
+    slider.value = '2';
+    sliderContainer.appendChild(slider);
+
+    document.body.appendChild(sliderContainer);
+
+    slider.addEventListener('input', (e) => {
+        myGamePiece.speed = parseInt(e.target.value);
+    });
 }

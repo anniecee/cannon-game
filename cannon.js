@@ -1,6 +1,6 @@
 function startGame() {
     myGameArea.start();
-    myGamePiece = new component();
+    myGamePiece = new component(); // Initialize the game piece (sprite)
     myCannonball = null; // Initialize cannonball as null
     shotSound = new Audio('shot.m4a'); // Initialize the shot sound
     createSpeedSlider(); // Create the speed slider
@@ -15,6 +15,7 @@ var myGameArea = {
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     
+        // Handle window resizing
         window.addEventListener('resize', () => {
             const widthRatio = window.innerWidth / this.canvas.width;
             const heightRatio = window.innerHeight / this.canvas.height;
@@ -26,6 +27,7 @@ var myGameArea = {
             myGamePiece.handleResize(widthRatio, heightRatio);
         });
 
+        // Handle key presses
         window.addEventListener('keydown', (e) => {
             myGameArea.keys = (myGameArea.keys || []);
             myGameArea.keys[e.keyCode] = true;
@@ -239,3 +241,5 @@ function createSpeedSlider() {
         myGamePiece.speed = parseInt(e.target.value);
     });
 }
+
+startGame(); // Start the game

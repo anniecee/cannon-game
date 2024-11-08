@@ -1,6 +1,11 @@
 function startGame() {
     score = 0;
     livesLeft = 5; // Initialize lives left
+    gameOver = false; // Initialize game over flag
+
+    hitHandled = false; // Flag to prevent multiple hit handling
+    missHandled = false; // Flag to prevent multiple miss handling
+
 
     explosionSound = new Audio('explosion.m4a'); // Preload the explosion sound
     explosionSound.load(); // Ensure the audio file is loaded
@@ -21,12 +26,22 @@ function startGame() {
                 myCannonball.y < myFuGoBalloon.y + balloonHeight &&
                 myCannonball.y + cannonballHeight > myFuGoBalloon.y
             ) {
-                handleHit();
+                if (!hitHandled) {
+                    handleHit();
+                    hitHandled = true; // Set the flag to true to prevent multiple handling
+                }
+            } else {
+                hitHandled = false; // Reset the flag if no hit
             }
         }
         // Check if the balloon reaches the bottom of the screen
         if (myFuGoBalloon && myFuGoBalloon.y + 250 >= myGameArea.canvas.height) {
-            handleMiss();
+            if (!missHandled) {
+                handleMiss();
+                missHandled = true; // Set the flag to true to prevent multiple handling
+            }
+        } else {
+            missHandled = false; // Reset the flag if no miss
         }
     }
 
@@ -68,22 +83,24 @@ function startGame() {
             livesLeft -= 1;
             updateStatusDisplay();
             if (livesLeft <= 0) {
-                alert("Game Over!");
-                document.location.reload();
+                gameOver = true; // Set the game over flag
+                updateStatusDisplay(); // Update the status display to show "Game Over"
             }
         };
     }
 
     myGameArea.update = function() {
-        myGameArea.clear();
-        myGamePiece.update();
-        if (myCannonball) {
-            myCannonball.update();
+        if (!gameOver) {
+            myGameArea.clear();
+            myGamePiece.update();
+            if (myCannonball) {
+                myCannonball.update();
+            }
+            if (myFuGoBalloon) {
+                myFuGoBalloon.update();
+            }
+            checkCollision();
         }
-        if (myFuGoBalloon) {
-            myFuGoBalloon.update();
-        }
-        checkCollision();
     };
 
     myGameArea.start();
@@ -372,7 +389,11 @@ function createSpeedSlider() {
 // Update the score and lives display
 function updateStatusDisplay() {
     document.getElementById('score').textContent = 'Score: ' + score;
-    document.getElementById('lives').textContent = 'Lives Left: ' + livesLeft;
+    if (gameOver) {
+        document.getElementById('lives').textContent = 'Game Over';
+    } else {
+        document.getElementById('lives').textContent = 'Lives Left: ' + livesLeft;
+    }
 }
 
 startGame(); // Start the game

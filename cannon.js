@@ -4,6 +4,37 @@ function startGame() {
     myCannonball = null; // Initialize cannonball as null
     shotSound = new Audio('shot.m4a'); // Initialize the shot sound
     createSpeedSlider(); // Create the speed slider
+    myFuGoBalloon = createFuGoBalloon();  // Initialize the Fu-Go balloon
+}
+
+// Create a Fu-Go balloon component
+function createFuGoBalloon() {
+    const balloon = {
+        x: Math.random() * (myGameArea.canvas.width - 250) + 200, // Random position at least 250px from the left
+        y: 0,
+        speed: 2,
+        image: new Image(),
+
+        // Update the balloon position and handle out of bounds
+        update: function() {
+            this.y += this.speed;
+            // Create a new balloon if it goes out of bounds
+            if (this.y > myGameArea.canvas.height) {
+                this.y = 0;
+                this.x = Math.random() * (myGameArea.canvas.width - 200) + 200;
+            }
+            this.redraw();
+        },
+        redraw: function() {
+            const ctx = myGameArea.context;
+            const aspectRatio = this.image.height / this.image.width;
+            const width = 120; // Set the width of the balloon
+            const height = width * aspectRatio;
+            ctx.drawImage(this.image, this.x, this.y, width, height);
+        }
+    };
+    balloon.image.src = 'img/FuGo.png';
+    return balloon;
 }
 
 // Create a canvas element and append it to the document
@@ -14,6 +45,7 @@ var myGameArea = {
         this.canvas.height = window.innerHeight;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.interval = setInterval(this.update.bind(this), 20); // Update the game area every 20ms
     
         // Handle window resizing
         window.addEventListener('resize', () => {
@@ -37,13 +69,17 @@ var myGameArea = {
             myGameArea.keys[e.keyCode] = false;
         });
 
-        this.interval = setInterval(this.update, 20); // Update the game area every 20ms
+        myFuGoBalloon = createFuGoBalloon(); // Initialize the Fu-Go balloon
+        this.interval = setInterval(() => this.update(), 20); // Update the game area every 20ms
     },
     update: function() {
         myGameArea.clear();
         myGamePiece.update();
         if (myCannonball) {
             myCannonball.update();
+        }
+        if (myFuGoBalloon) {
+            myFuGoBalloon.update();
         }
     },
     clear: function() {

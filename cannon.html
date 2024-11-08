@@ -19,8 +19,27 @@
             background: url('img/Background.jpg');
             background-size: 100vw 100vh; /* 100% width and height */
         }
+
+        #livesContainer, #scoreContainer {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid black;
+        }
+        #scoreContainer {
+            top: 110px; /* Adjust the top position to avoid overlap with livesContainer */
+        }
     </style>
 </head>
 <body>
+    <div id="livesContainer">
+        <div id="lives">Lives Left: 5</div>
+    </div>
+    <div id="scoreContainer">
+        <div id="score">Score: 0</div>
+    </div>
 </body>
 </html>
